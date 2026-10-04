@@ -441,7 +441,3 @@ uv run python src/main.py
 という運用を基本とします。
 
 ---
-
-## License
-
-必要に応じてライセンスを追加してください。
