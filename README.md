@@ -51,7 +51,7 @@ cd <repository-name>
 ### 3. uvで環境を構築
 
 ```powershell
-uv sync
+uv self update && uv sync --upgrade
 ```
 
 `pyproject.toml` と `uv.lock` をもとに、プロジェクト用の `.venv` と必要なパッケージが準備されます。
@@ -100,7 +100,7 @@ Notebook右上のカーネル選択から、プロジェクトの `.venv` を選
 例:
 
 ```text
-Python 3.13.x (.venv)
+Python 3.15.x (.venv)
 ```
 
 `ipykernel` は開発依存関係としてインストールされているため、そのままセルを実行できます。
@@ -245,7 +245,7 @@ Gitで管理することで、異なる環境でも同じ依存関係を再現�
 
 このテンプレートは以下の環境での利用を想定しています。
 
-- Python 3.13
+- Python 3.15
 - uv
 - Git
 - VS Code
