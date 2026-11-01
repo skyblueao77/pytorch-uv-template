@@ -11,8 +11,8 @@ Python環境と依存関係の管理には `uv` を使用し、VS CodeおよびJ
 - NumPy
 - Matplotlib
 - Jupyter Notebook / ipykernel
-- Ruff
-- VS Code対応
+- Ruff による Lint / Format
+- VS Code 設定済み（自動インタプリタ検出・保存時フォーマット）
 - `uv.lock` による再現可能な開発環境
 
 ## Quick Start
@@ -51,7 +51,7 @@ cd <repository-name>
 ### 3. uvで環境を構築
 
 ```powershell
-uv self update && uv sync --upgrade
+uv sync
 ```
 
 `pyproject.toml` と `uv.lock` をもとに、プロジェクト用の `.venv` と必要なパッケージが準備されます。
@@ -62,7 +62,8 @@ uv self update && uv sync --upgrade
 code .
 ```
 
-必要に応じて、VS CodeでPython Interpreterを選択します。
+`.vscode/settings.json` により、仮想環境 `.venv` のPythonインタプリタが自動認識されます。
+手動で切り替える場合は以下を実行します：
 
 ```text
 Ctrl + Shift + P
@@ -85,7 +86,7 @@ PyTorch: 2.x.x+cpu
 CUDA available: False
 ```
 
-CPU版PyTorchを使用している場合、`CUDA available: False` でも問題ありません。
+CPU版PyTorchを使用している場合、`CUDA available: False` でも問題ありません。GPU (CUDA) 版を利用したい場合は後述の「GPU (CUDA) 版 PyTorchの利用」を参照してください。
 
 ### 6. Jupyter Notebookを使う
 
@@ -100,7 +101,7 @@ Notebook右上のカーネル選択から、プロジェクトの `.venv` を選
 例:
 
 ```text
-Python 3.15.x (.venv)
+Python 3.14.x (.venv)
 ```
 
 `ipykernel` は開発依存関係としてインストールされているため、そのままセルを実行できます。
@@ -163,6 +164,13 @@ uv add --dev <package>
 uv add --dev pytest
 ```
 
+### コードの静的チェック / フォーマット (Ruff)
+
+```powershell
+uv run ruff check .
+uv run ruff format .
+```
+
 ### 依存関係を同期
 
 GitHubから変更を取得した場合などは、必要に応じて次を実行します。
@@ -182,18 +190,54 @@ uv sync
 
 ---
 
+## GPU (CUDA) 版 PyTorch の利用
+
+デフォルトではクロスプラットフォームで軽量な CPU 版 PyTorch がインストールされます。  
+NVIDIA GPU を搭載したマシンで CUDA 版 PyTorch を使用したい場合は、`pyproject.toml` に PyTorch の公式インデックス設定を追加します。
+
+### 設定例 (CUDA 12.6 の場合)
+
+`pyproject.toml` に以下を追記します：
+
+```toml
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
+torchvision = { index = "pytorch-cu126" }
+```
+
+その後、ロックファイルを更新して同期します。
+
+```powershell
+uv lock --upgrade
+uv sync
+```
+
+`src/main.py` を再実行して `CUDA available: True` と表示されれば完了です。
+
+---
+
 ## Project Structure
 
 ```text
 .
+├── .github/
+│   └── dependabot.yml       # Dependabot (uv自動更新) 設定
+├── .vscode/
+│   ├── extensions.json      # VS Code 推奨拡張機能
+│   └── settings.json        # VS Code ワークスペース設定
 ├── notebooks/
-│   └── playground.ipynb
+│   └── playground.ipynb     # 実験用Jupyter Notebook
 ├── src/
-│   └── main.py
+│   └── main.py              # 動作確認スクリプト
 ├── .gitignore
-├── .python-version
-├── pyproject.toml
-├── uv.lock
+├── .python-version          # 使用するPythonバージョン (3.14)
+├── pyproject.toml           # プロジェクト定義・依存関係・ツールの設定
+├── uv.lock                  # パッケージバージョン固定ファイル
 └── README.md
 ```
 
@@ -245,7 +289,7 @@ Gitで管理することで、異なる環境でも同じ依存関係を再現�
 
 このテンプレートは以下の環境での利用を想定しています。
 
-- Python 3.15
+- Python 3.14
 - uv
 - Git
 - VS Code
@@ -256,7 +300,9 @@ Gitで管理することで、異なる環境でも同じ依存関係を再現�
 
 ## VS Code
 
-VS Codeが正しいPython環境を認識していない場合は、以下を実行します。
+`.vscode/settings.json` により、VS Code 起動時に `.venv` 内の Python インタプリタが自動選択され、保存時に Ruff による自動フォーマットが行われます。
+
+手動で確認・変更したい場合は以下を実行します：
 
 ```text
 Ctrl + Shift + P
@@ -297,48 +343,6 @@ VS Codeから次のようなメッセージが表示された場合:
 ```powershell
 uv sync
 ```
-
-新しいuvプロジェクトで `ipykernel` 自体を追加する場合は、次のようにします。
-
-```powershell
-uv add --dev ipykernel
-```
-
----
-
-## Managing Packages
-
-### パッケージを追加
-
-```powershell
-uv add <package>
-```
-
-### パッケージを削除
-
-```powershell
-uv remove <package>
-```
-
-### 開発用パッケージを追加
-
-```powershell
-uv add --dev <package>
-```
-
-### 環境を同期
-
-```powershell
-uv sync
-```
-
-### Pythonコマンドを実行
-
-```powershell
-uv run python <file>
-```
-
-基本的には、仮想環境を手動でActivateしなくても `uv run` を使用してPythonを実行できます。
 
 ---
 
@@ -385,25 +389,6 @@ uv sync
 
 を実行することで環境を再構築できます。
 
-基本的な流れは以下のとおりです。
-
-```text
-GitHub Repository
-       │
-       ├── pyproject.toml
-       ├── uv.lock
-       └── .python-version
-              │
-              ▼
-           uv sync
-              │
-              ▼
-            .venv
-              │
-              ▼
-        VS Code / Jupyter
-```
-
 ---
 
 ## Typical Workflow
@@ -421,9 +406,7 @@ GitHub Repository
         ↓
 5. code .
         ↓
-6. .venvをPython Interpreter / Notebook Kernelとして選択
-        ↓
-7. 開発開始
+6. 開発開始（VS Codeが自動で .venv を認識）
 ```
 
 以降、パッケージが必要になったら:

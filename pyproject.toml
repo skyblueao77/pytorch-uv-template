@@ -1,7 +1,7 @@
 [project]
 name = "pytorch-uv-template"
 version = "0.1.0"
-description = "Add your description here"
+description = "PyTorch project template managed with uv"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -16,3 +16,29 @@ dev = [
     "ipykernel>=7.4.0",
     "ruff>=0.16.10",
 ]
+
+[tool.uv]
+package = false
+
+# --- GPU (CUDA) 版 PyTorch を使用する場合の設定例 ---
+# uv では特定のインデックスから wheel を取得するように設定できます。
+# 例: CUDA 12.6 向けホイールを指定する場合
+# [[tool.uv.index]]
+# name = "pytorch-cu126"
+# url = "https://download.pytorch.org/whl/cu126"
+# explicit = true
+#
+# [tool.uv.sources]
+# torch = { index = "pytorch-cu126" }
+# torchvision = { index = "pytorch-cu126" }
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# ノートブック内では実験途中の未使用インポートを許容
+"*.ipynb" = ["F401"]
